@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     token_encryption_key: str = ""
     secret_key: str = "change-me-in-production"
 
+    # Admin auth
+    admin_username: str = "admin"
+    admin_password: str = "changeme"
+    jwt_expiration_minutes: int = 480
+
     # App
     database_url: str = "sqlite:///./social_agent.db"
     uploads_dir: str = "./uploads"

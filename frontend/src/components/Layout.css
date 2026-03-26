@@ -62,6 +62,12 @@
   border-top: 1px solid var(--border);
 }
 
+.logout-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+}
+
 .main-content {
   margin-left: 220px;
   flex: 1;
