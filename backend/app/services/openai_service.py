@@ -33,7 +33,7 @@ async def generate_post(
         user_msg += f"\n\n額外要求：{extra}"
 
     resp = await client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user_msg},
@@ -68,7 +68,7 @@ async def analyze_image(
     char_limit = _get_char_limit(persona)
 
     resp = await client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system},
             {
@@ -114,7 +114,7 @@ async def split_into_thread(
     user_msg = build_thread_split_prompt(article, platform, max_chars)
 
     resp = await client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": user_msg},
@@ -149,7 +149,7 @@ async def analyze_performance_patterns(
         f"只回傳 JSON。"
     )
     resp = await client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=1000,
         temperature=0.5,
@@ -182,7 +182,7 @@ async def suggest_improvements(
         f"只回傳 JSON。"
     )
     resp = await client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
@@ -208,7 +208,7 @@ async def narrate_optimal_times(heatmap_data: list[dict]) -> str:
         f"請用繁體中文，以2–3段自然語言，說明最佳發文時段與應避免的時段，並給出具體建議。"
     )
     resp = await client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=400,
         temperature=0.5,
