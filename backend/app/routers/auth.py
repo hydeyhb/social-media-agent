@@ -72,7 +72,7 @@ async def threads_login():
     params = urllib.parse.urlencode({
         "client_id": settings.threads_app_id,
         "redirect_uri": settings.threads_redirect_uri,
-        "scope": "threads_basic,threads_content_publish,threads_manage_replies,threads_read_engagement",
+        "scope": "threads_basic,threads_content_publish",
         "response_type": "code",
     })
     return RedirectResponse(f"https://www.threads.net/oauth/authorize?{params}")
@@ -81,12 +81,15 @@ async def threads_login():
 @router.get("/threads/callback")
 async def threads_callback(code: str, db: Session = Depends(get_db)):
     # 1. Exchange code for short-lived token
-    short_data = await threads_service.exchange_code_for_token(
-        code,
-        settings.threads_app_id,
-        settings.threads_app_secret,
-        settings.threads_redirect_uri,
-    )
+    try:
+        short_data = await threads_service.exchange_code_for_token(
+            code,
+            settings.threads_app_id,
+            settings.threads_app_secret,
+            settings.threads_redirect_uri,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Threads token exchange failed: {e}")
     short_token = short_data.get("access_token", "")
     user_id = short_data.get("user_id", "")
 
@@ -105,7 +108,7 @@ async def threads_callback(code: str, db: Session = Depends(get_db)):
         access_token=long_token,
         expires_at=expires_at,
         user_id=str(user_id),
-        scope=["threads_basic", "threads_content_publish"],
+        scope=["threads_basic", "threads_content_publish"],  # Add more scopes as they are enabled in Meta Developer
     )
 
     # Schedule auto-refresh at day 50
