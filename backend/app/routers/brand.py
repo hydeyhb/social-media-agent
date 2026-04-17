@@ -6,7 +6,13 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.brand import BrandPersona
-from app.schemas.brand import BrandPersonaCreate, BrandPersonaOut, BrandPersonaUpdate
+from app.schemas.brand import (
+    BrandPersonaCreate,
+    BrandPersonaOut,
+    BrandPersonaUpdate,
+    PersonaBriefRequest,
+)
+from app.services import persona_service
 
 router = APIRouter()
 
@@ -97,6 +103,21 @@ async def activate_persona(persona_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(persona)
     return _serialize(persona)
+
+
+@router.post("/generate", response_model=BrandPersonaCreate)
+async def generate_persona_from_brief(data: PersonaBriefRequest):
+    """Generate suggested brand persona fields from a free-text brief.
+
+    Does NOT write to DB — frontend will let the user edit then POST /brand to save.
+    """
+    if not data.brief.strip():
+        raise HTTPException(status_code=400, detail="brief is required")
+    try:
+        suggestion = await persona_service.generate_from_brief(data.brief)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI 生成失敗：{e}")
+    return suggestion
 
 
 @router.delete("/{persona_id}")

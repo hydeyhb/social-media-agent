@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.asset import MediaAsset
 from app.models.brand import BrandPersona
-from app.services.vision_service import process_upload
+from app.services.vision_service import process_upload, process_uploads
 
 router = APIRouter()
 
@@ -39,6 +39,50 @@ async def upload_asset(
         "file_size_bytes": asset.file_size_bytes,
         "vision_analysis": asset.vision_analysis,
         "generated_caption": asset.generated_caption,
+    }
+
+
+MAX_MULTI_IMAGES = 6
+
+
+@router.post("/upload-multi")
+async def upload_assets(
+    files: List[UploadFile] = File(...),
+    platform: str = "both",
+    persona_id: int = None,
+    db: Session = Depends(get_db),
+):
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    if len(files) > MAX_MULTI_IMAGES:
+        raise HTTPException(status_code=400, detail=f"Max {MAX_MULTI_IMAGES} images per upload")
+    for f in files:
+        if not f.content_type or not f.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail=f"{f.filename}: only image files supported")
+
+    if persona_id:
+        persona = db.query(BrandPersona).filter(BrandPersona.id == persona_id).first()
+    else:
+        persona = db.query(BrandPersona).filter(BrandPersona.is_active == True).first()
+    if not persona:
+        raise HTTPException(status_code=400, detail="No brand persona configured")
+
+    result = await process_uploads(files, persona, db, platform)
+    return {
+        "asset_ids": result["asset_ids"],
+        "primary_asset_id": result["primary_asset_id"],
+        "description": result["description"],
+        "caption": result["caption"],
+        "assets": [
+            {
+                "id": a.id,
+                "filename": a.filename,
+                "url": f"/uploads/{a.filename}",
+                "mime_type": a.mime_type,
+                "file_size_bytes": a.file_size_bytes,
+            }
+            for a in result["assets"]
+        ],
     }
 
 

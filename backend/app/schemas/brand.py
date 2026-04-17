@@ -18,6 +18,10 @@ class BrandPersonaUpdate(BrandPersonaCreate):
     name: Optional[str] = None
 
 
+class PersonaBriefRequest(BaseModel):
+    brief: str
+
+
 class BrandPersonaOut(BaseModel):
     id: int
     name: str
