@@ -3,12 +3,13 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.database import create_tables
-from app.routers import auth, brand, posts, generation, analytics, assets, webhooks
+from app.routers import admin, auth, brand, posts, generation, analytics, assets, webhooks
+from app.services.auth_service import decode_access_token
 from app.services.scheduler_service import get_scheduler
 from app.tasks.analytics_sync_task import run_analytics_sync_sync
 
@@ -28,7 +29,51 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Auth middleware – protect /api/* routes (whitelist exceptions)
+AUTH_WHITELIST = {
+    ("POST", "/api/admin/login"),
+    ("GET", "/api/health"),
+    ("GET", "/api/auth/facebook/callback"),
+    ("GET", "/api/auth/threads/callback"),
+}
+
+
+@app.middleware("http")
+async def admin_auth_middleware(request: Request, call_next):
+    path = request.url.path
+    method = request.method
+
+    # Skip non-API paths (frontend, uploads, static)
+    if not path.startswith("/api/"):
+        return await call_next(request)
+
+    # Skip CORS preflight
+    if method == "OPTIONS":
+        return await call_next(request)
+
+    # Skip whitelisted exact paths
+    if (method, path) in AUTH_WHITELIST:
+        return await call_next(request)
+
+    # Skip webhook paths
+    if path.startswith("/api/webhooks"):
+        return await call_next(request)
+
+    # Verify JWT
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
+
+    token = auth_header[7:]
+    username = decode_access_token(token)
+    if username is None:
+        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+
+    return await call_next(request)
+
+
 # Routers
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(brand.router, prefix="/api/brand", tags=["Brand"])
 app.include_router(posts.router, prefix="/api/posts", tags=["Posts"])

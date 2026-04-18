@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import useAuthStore from '../store/authStore'
 import './Layout.css'
 
 const navItems = [
@@ -14,6 +15,14 @@ const navItems = [
 ]
 
 export default function Layout() {
+  const navigate = useNavigate()
+  const logout = useAuthStore((s) => s.logout)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div className="layout">
       <aside className="sidebar">
@@ -34,6 +43,9 @@ export default function Layout() {
           ))}
         </nav>
         <div className="sidebar-footer">
+          <button onClick={handleLogout} className="nav-item logout-btn">
+            🚪 登出
+          </button>
           <a href="/api/docs" target="_blank" rel="noreferrer" className="nav-item">
             📖 API Docs
           </a>
