@@ -62,9 +62,13 @@ export default function GenerateContent() {
     setStreamProgress(0)
 
     const url = `/api/generate/bulk`
+    const token = localStorage.getItem('token')
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({
         topics,
         platform,
@@ -73,6 +77,13 @@ export default function GenerateContent() {
         provider,
       }),
     })
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}))
+      showToast(errBody.detail || `批量生成失敗 (${res.status})`, 'error')
+      setLoading(false)
+      return
+    }
 
     const reader = res.body.getReader()
     const decoder = new TextDecoder()

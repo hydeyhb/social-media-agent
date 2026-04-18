@@ -1,10 +1,13 @@
 import json
+import logging
 import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.database import get_db
 from app.models.brand import BrandPersona
@@ -38,7 +41,11 @@ def _get_persona(persona_id: Optional[int], db: Session) -> BrandPersona:
 async def generate_single(data: GenerateSingleRequest, db: Session = Depends(get_db)):
     persona = _get_persona(data.persona_id, db)
     impl = ai_provider.get(data.provider)
-    content = await impl.generate_post(data.topic, persona, data.platform, data.extra_instructions)
+    try:
+        content = await impl.generate_post(data.topic, persona, data.platform, data.extra_instructions)
+    except Exception as e:
+        logger.exception(f"{data.provider} 生文失敗")
+        raise HTTPException(status_code=500, detail=f"{data.provider} 生文失敗：{e}")
     image = None
     if data.with_image:
         image = await image_gen_service.generate_for_caption(content, persona, db, data.provider)
@@ -53,7 +60,16 @@ async def generate_bulk(data: GenerateBulkRequest, db: Session = Depends(get_db)
 
     async def event_stream():
         for idx, topic in enumerate(data.topics):
-            content = await impl.generate_post(topic, persona, data.platform)
+            try:
+                content = await impl.generate_post(topic, persona, data.platform)
+            except Exception as e:
+                logger.exception(f"批量生成第 {idx+1} 篇失敗")
+                error_payload = json.dumps(
+                    {"index": idx, "error": f"生成失敗：{e}", "total": len(data.topics)},
+                    ensure_ascii=False,
+                )
+                yield f"data: {error_payload}\n\n"
+                continue
             payload = json.dumps(
                 {"index": idx, "content": content, "total": len(data.topics)},
                 ensure_ascii=False,
