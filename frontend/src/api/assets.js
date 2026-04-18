@@ -13,3 +13,12 @@ export const uploadAsset = (file, platform = 'both', personaId = null) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
+
+export const uploadAssets = (files, platform = 'both', personaId = null) => {
+  const form = new FormData()
+  files.forEach(f => form.append('files', f))
+  if (personaId) form.append('persona_id', personaId)
+  return axios.post(`/api/assets/upload-multi?platform=${platform}`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}

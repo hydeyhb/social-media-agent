@@ -112,7 +112,30 @@ async def create_reply_container(
         return resp.json().get("id", "")
 
 
+async def check_container_status(container_id: str, token: str) -> str:
+    """Check the status of a media container."""
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"{THREADS_BASE}/{container_id}",
+            params={"fields": "status,error_message", "access_token": token},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("status", "UNKNOWN"), data.get("error_message", "")
+
+
 async def publish_container(container_id: str, user_id: str, token: str) -> str:
+    # Wait for container to be ready (poll status)
+    for _ in range(10):
+        status, error_msg = await check_container_status(container_id, token)
+        if status == "FINISHED":
+            break
+        if status == "ERROR":
+            raise RuntimeError(f"Threads container error: {error_msg}")
+        await asyncio.sleep(2)
+    else:
+        raise RuntimeError(f"Threads container not ready after 20s, status: {status}")
+
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             f"{THREADS_BASE}/{user_id}/threads_publish",

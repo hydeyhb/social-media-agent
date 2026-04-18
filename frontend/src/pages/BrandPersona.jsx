@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAllBrands, createBrand, updateBrand, activateBrand, deleteBrand } from '../api/brand'
+import { getAllBrands, createBrand, updateBrand, activateBrand, deleteBrand, generatePersonaFromBrief } from '../api/brand'
 
 const TONE_OPTIONS = ['professional', 'playful', 'authoritative', 'warm', 'inspirational', 'casual', 'luxurious']
 const EMOJI_OPTIONS = [
@@ -55,6 +55,9 @@ export default function BrandPersona() {
   const [form, setForm] = useState(defaultForm)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
+  const [briefOpen, setBriefOpen] = useState(false)
+  const [brief, setBrief] = useState('')
+  const [briefLoading, setBriefLoading] = useState(false)
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -107,6 +110,24 @@ export default function BrandPersona() {
     await load()
   }
 
+  const handleGenerateFromBrief = async () => {
+    if (!brief.trim()) return
+    setBriefLoading(true)
+    try {
+      const res = await generatePersonaFromBrief(brief.trim())
+      setForm(prev => ({
+        ...res.data,
+        name: prev.name || res.data.name,
+      }))
+      setBriefOpen(false)
+      setBrief('')
+      showToast('已套用 AI 建議，請檢查並儲存')
+    } catch (e) {
+      showToast(e?.response?.data?.detail || 'AI 生成失敗', 'error')
+    }
+    setBriefLoading(false)
+  }
+
   return (
     <div>
       <h1 className="page-title">🎨 品牌人設設定</h1>
@@ -149,7 +170,12 @@ export default function BrandPersona() {
 
         {/* Right: Form */}
         <div className="card">
-          <div className="section-title">{selected ? `編輯：${selected.name}` : '新建品牌人設'}</div>
+          <div className="flex-between" style={{ marginBottom: 16 }}>
+            <div className="section-title" style={{ margin: 0 }}>{selected ? `編輯：${selected.name}` : '新建品牌人設'}</div>
+            <button className="btn-secondary" onClick={() => setBriefOpen(true)} style={{ fontSize: 13 }}>
+              🪄 AI 依簡介生成
+            </button>
+          </div>
 
           <div className="form-group">
             <label>品牌名稱 *</label>
@@ -203,6 +229,36 @@ export default function BrandPersona() {
           </button>
         </div>
       </div>
+
+      {briefOpen && (
+        <div
+          onClick={() => !briefLoading && setBriefOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}
+        >
+          <div onClick={e => e.stopPropagation()} className="card" style={{ maxWidth: 560, width: '100%' }}>
+            <div className="section-title">🪄 AI 依簡介生成品牌人設</div>
+            <div className="text-small text-muted mb-8">
+              貼一段品牌簡介，AI 會自動產出完整人設（口吻、受眾、關鍵字、禁用詞等），你可以再編輯後再儲存。
+            </div>
+            <div className="form-group">
+              <label>品牌簡介</label>
+              <textarea
+                value={brief}
+                onChange={e => setBrief(e.target.value)}
+                placeholder="例：日系手沖咖啡品牌，強調慢活、產地直送，目標客群是 30-45 歲都市白領，希望塑造療癒、寧靜的品牌形象..."
+                rows={6}
+                disabled={briefLoading}
+              />
+            </div>
+            <div className="flex gap-8">
+              <button className="btn-primary" onClick={handleGenerateFromBrief} disabled={briefLoading || !brief.trim()}>
+                {briefLoading ? <><span className="spinner" style={{ width: 16, height: 16 }} /> AI 生成中...</> : '✨ 生成人設'}
+              </button>
+              <button className="btn-secondary" onClick={() => setBriefOpen(false)} disabled={briefLoading}>取消</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
     </div>

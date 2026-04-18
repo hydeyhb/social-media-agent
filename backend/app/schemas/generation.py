@@ -7,12 +7,14 @@ class GenerateSingleRequest(BaseModel):
     platform: str = "both"
     persona_id: Optional[int] = None
     extra_instructions: str = ""
+    with_image: bool = False
 
 
 class GenerateBulkRequest(BaseModel):
     topics: List[str]
     platform: str = "both"
     persona_id: Optional[int] = None
+    with_image: bool = False
 
 
 class GenerateThreadRequest(BaseModel):
