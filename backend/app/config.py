@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = ""
 
+    # Google Gemini
+    gemini_api_key: str = ""
+
     # Facebook
     facebook_app_id: str = ""
     facebook_app_secret: str = ""

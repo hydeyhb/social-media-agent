@@ -58,6 +58,7 @@ export default function BrandPersona() {
   const [briefOpen, setBriefOpen] = useState(false)
   const [brief, setBrief] = useState('')
   const [briefLoading, setBriefLoading] = useState(false)
+  const [briefProvider, setBriefProvider] = useState('openai')
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -114,7 +115,7 @@ export default function BrandPersona() {
     if (!brief.trim()) return
     setBriefLoading(true)
     try {
-      const res = await generatePersonaFromBrief(brief.trim())
+      const res = await generatePersonaFromBrief(brief.trim(), briefProvider)
       setForm(prev => ({
         ...res.data,
         name: prev.name || res.data.name,
@@ -239,6 +240,13 @@ export default function BrandPersona() {
             <div className="section-title">🪄 AI 依簡介生成品牌人設</div>
             <div className="text-small text-muted mb-8">
               貼一段品牌簡介，AI 會自動產出完整人設（口吻、受眾、關鍵字、禁用詞等），你可以再編輯後再儲存。
+            </div>
+            <div className="form-group">
+              <label>AI 模型</label>
+              <select value={briefProvider} onChange={e => setBriefProvider(e.target.value)} disabled={briefLoading}>
+                <option value="openai">OpenAI (GPT-4o-mini)</option>
+                <option value="gemini">Google Gemini (2.5 Pro)</option>
+              </select>
             </div>
             <div className="form-group">
               <label>品牌簡介</label>

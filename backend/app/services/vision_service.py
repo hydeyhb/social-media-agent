@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.models.asset import MediaAsset
 from app.models.brand import BrandPersona
-from app.services import openai_service
+from app.services import ai_provider
 
 settings = get_settings()
 
@@ -18,8 +18,9 @@ async def process_upload(
     persona: BrandPersona,
     db: Session,
     platform: str = "both",
+    provider: str = "openai",
 ) -> MediaAsset:
-    result = await process_uploads([file], persona, db, platform)
+    result = await process_uploads([file], persona, db, platform, provider)
     return result["assets"][0]
 
 
@@ -28,6 +29,7 @@ async def process_uploads(
     persona: BrandPersona,
     db: Session,
     platform: str = "both",
+    provider: str = "openai",
 ) -> dict:
     if not files:
         raise ValueError("files must not be empty")
@@ -54,7 +56,8 @@ async def process_uploads(
         })
 
     images = [(s["content"], s["mime_type"]) for s in saved]
-    analysis = await openai_service.analyze_images(images, persona, platform)
+    impl = ai_provider.get(provider)
+    analysis = await impl.analyze_images(images, persona, platform)
     description = analysis.get("description", "")
     caption = analysis.get("caption", "")
 

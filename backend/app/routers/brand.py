@@ -114,7 +114,7 @@ async def generate_persona_from_brief(data: PersonaBriefRequest):
     if not data.brief.strip():
         raise HTTPException(status_code=400, detail="brief is required")
     try:
-        suggestion = await persona_service.generate_from_brief(data.brief)
+        suggestion = await persona_service.generate_from_brief(data.brief, data.provider)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI 生成失敗：{e}")
     return suggestion

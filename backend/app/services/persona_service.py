@@ -39,9 +39,18 @@ def _sanitize(raw: dict) -> dict:
     return out
 
 
-async def generate_from_brief(brief: str) -> dict:
+async def generate_from_brief(brief: str, provider: str = "openai") -> dict:
     if not brief or not brief.strip():
         raise ValueError("brief is required")
+
+    if provider == "gemini":
+        from app.services import gemini_service
+        raw = await gemini_service.generate_persona_from_brief(brief)
+        try:
+            parsed = json.loads(raw)
+        except Exception:
+            parsed = {}
+        return _sanitize(parsed)
 
     client = _client()
     system = (

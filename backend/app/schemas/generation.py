@@ -8,6 +8,7 @@ class GenerateSingleRequest(BaseModel):
     persona_id: Optional[int] = None
     extra_instructions: str = ""
     with_image: bool = False
+    provider: str = "openai"  # openai | gemini
 
 
 class GenerateBulkRequest(BaseModel):
@@ -15,6 +16,7 @@ class GenerateBulkRequest(BaseModel):
     platform: str = "both"
     persona_id: Optional[int] = None
     with_image: bool = False
+    provider: str = "openai"
 
 
 class GenerateThreadRequest(BaseModel):

@@ -17,6 +17,7 @@ async def upload_asset(
     file: UploadFile = File(...),
     platform: str = "both",
     persona_id: int = None,
+    provider: str = "openai",
     db: Session = Depends(get_db),
 ):
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -30,7 +31,7 @@ async def upload_asset(
     if not persona:
         raise HTTPException(status_code=400, detail="No brand persona configured")
 
-    asset = await process_upload(file, persona, db, platform)
+    asset = await process_upload(file, persona, db, platform, provider)
     return {
         "id": asset.id,
         "filename": asset.filename,
@@ -50,6 +51,7 @@ async def upload_assets(
     files: List[UploadFile] = File(...),
     platform: str = "both",
     persona_id: int = None,
+    provider: str = "openai",
     db: Session = Depends(get_db),
 ):
     if not files:
@@ -67,7 +69,7 @@ async def upload_assets(
     if not persona:
         raise HTTPException(status_code=400, detail="No brand persona configured")
 
-    result = await process_uploads(files, persona, db, platform)
+    result = await process_uploads(files, persona, db, platform, provider)
     return {
         "asset_ids": result["asset_ids"],
         "primary_asset_id": result["primary_asset_id"],
