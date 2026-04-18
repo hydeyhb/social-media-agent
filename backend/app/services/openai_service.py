@@ -291,6 +291,13 @@ async def generate_image(prompt: str, size: str = "1024x1024") -> tuple[bytes, s
         except Exception as e:
             last_error = e
             continue
+    msg = str(last_error)
+    if "model_not_found" in msg or "does not have access" in msg:
+        raise RuntimeError(
+            "OpenAI 專案未啟用任何圖片模型（gpt-image-1 / dall-e-3）。"
+            "請在 https://platform.openai.com/settings 啟用圖片模型，"
+            "或在「AI 模型」改選 Google Gemini 使用 Imagen 生圖。"
+        )
     raise RuntimeError(f"All image models failed. Last error: {last_error}")
 
 

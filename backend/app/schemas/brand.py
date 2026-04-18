@@ -20,6 +20,7 @@ class BrandPersonaUpdate(BrandPersonaCreate):
 
 class PersonaBriefRequest(BaseModel):
     brief: str
+    provider: str = "openai"  # openai | gemini
 
 
 class BrandPersonaOut(BaseModel):

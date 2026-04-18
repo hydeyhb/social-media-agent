@@ -15,7 +15,7 @@ from app.schemas.generation import (
     GenerateSingleRequest,
     GenerateThreadRequest,
 )
-from app.services import image_gen_service, openai_service, optimization_service
+from app.services import ai_provider, image_gen_service, openai_service, optimization_service
 
 router = APIRouter()
 
@@ -37,28 +37,30 @@ def _get_persona(persona_id: Optional[int], db: Session) -> BrandPersona:
 @router.post("/single")
 async def generate_single(data: GenerateSingleRequest, db: Session = Depends(get_db)):
     persona = _get_persona(data.persona_id, db)
-    content = await openai_service.generate_post(data.topic, persona, data.platform, data.extra_instructions)
+    impl = ai_provider.get(data.provider)
+    content = await impl.generate_post(data.topic, persona, data.platform, data.extra_instructions)
     image = None
     if data.with_image:
-        image = await image_gen_service.generate_for_caption(content, persona, db)
-    return {"content": content, "persona_id": persona.id, "image": image}
+        image = await image_gen_service.generate_for_caption(content, persona, db, data.provider)
+    return {"content": content, "persona_id": persona.id, "image": image, "provider": data.provider}
 
 
 @router.post("/bulk")
 async def generate_bulk(data: GenerateBulkRequest, db: Session = Depends(get_db)):
     persona = _get_persona(data.persona_id, db)
     with_image = data.with_image
+    impl = ai_provider.get(data.provider)
 
     async def event_stream():
         for idx, topic in enumerate(data.topics):
-            content = await openai_service.generate_post(topic, persona, data.platform)
+            content = await impl.generate_post(topic, persona, data.platform)
             payload = json.dumps(
                 {"index": idx, "content": content, "total": len(data.topics)},
                 ensure_ascii=False,
             )
             yield f"data: {payload}\n\n"
             if with_image:
-                image = await image_gen_service.generate_for_caption(content, persona, db)
+                image = await image_gen_service.generate_for_caption(content, persona, db, data.provider)
                 img_payload = json.dumps(
                     {"index": idx, "image": image, "total": len(data.topics)},
                     ensure_ascii=False,

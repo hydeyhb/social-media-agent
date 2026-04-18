@@ -16,6 +16,7 @@ export default function GenerateContent() {
   const [streamProgress, setStreamProgress] = useState(0)
   const [toast, setToast] = useState(null)
   const [withImage, setWithImage] = useState(false)
+  const [provider, setProvider] = useState('openai')
   const [previewSrc, setPreviewSrc] = useState(null)
 
   const showToast = (msg, type = 'success') => {
@@ -41,6 +42,7 @@ export default function GenerateContent() {
         platform,
         persona_id: personaId ? Number(personaId) : null,
         with_image: withImage,
+        provider,
       })
       setGenerated([{ content: res.data.content, image: res.data.image, approved: false, saved: false }])
       if (withImage && res.data.image?.error) {
@@ -68,6 +70,7 @@ export default function GenerateContent() {
         platform,
         persona_id: personaId ? Number(personaId) : null,
         with_image: withImage,
+        provider,
       }),
     })
 
@@ -147,6 +150,14 @@ export default function GenerateContent() {
               {personas.map(p => <option key={p.id} value={p.id}>{p.name}{p.is_active ? ' ✅' : ''}</option>)}
             </select>
           </div>
+        </div>
+
+        <div className="form-group">
+          <label>AI 模型</label>
+          <select value={provider} onChange={e => setProvider(e.target.value)}>
+            <option value="openai">OpenAI (GPT-4o-mini)</option>
+            <option value="gemini">Google Gemini (2.5 Pro / Imagen)</option>
+          </select>
         </div>
 
         {mode === 'single' ? (

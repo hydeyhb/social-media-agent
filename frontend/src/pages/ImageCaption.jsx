@@ -14,6 +14,7 @@ export default function ImageCaption() {
   const [primaryAssetId, setPrimaryAssetId] = useState(null)
   const [toast, setToast] = useState(null)
   const [publishing, setPublishing] = useState(false)
+  const [provider, setProvider] = useState('openai')
   const inputRef = useRef()
 
   const showToast = (msg, type = 'success') => {
@@ -50,7 +51,7 @@ export default function ImageCaption() {
     if (!files.length) return
     setLoading(true)
     try {
-      const res = await uploadAssets(files, platform)
+      const res = await uploadAssets(files, platform, null, provider)
       const data = res.data
       setResult(data)
       setCaption(data.caption || '')
@@ -97,6 +98,14 @@ export default function ImageCaption() {
               <option value="both">兩個平台</option>
               <option value="facebook">Facebook</option>
               <option value="threads">Threads</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>AI 模型</label>
+            <select value={provider} onChange={e => setProvider(e.target.value)}>
+              <option value="openai">OpenAI (GPT-4o-mini)</option>
+              <option value="gemini">Google Gemini (2.5 Flash)</option>
             </select>
           </div>
 

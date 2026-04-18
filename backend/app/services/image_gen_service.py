@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.models.asset import MediaAsset
 from app.models.brand import BrandPersona
-from app.services import openai_service
+from app.services import ai_provider
 
 settings = get_settings()
 
@@ -16,15 +16,16 @@ async def generate_for_caption(
     caption: str,
     persona: BrandPersona,
     db: Session,
+    provider: str = "openai",
 ) -> Optional[dict]:
     """Generate an image to accompany the given caption.
 
-    Returns {"asset_id", "url", "prompt", "model"} or None on failure.
-    Failures are swallowed so caption generation isn't blocked.
+    Returns {"asset_id", "url", "prompt", "model"} or {"error": ...} on failure.
     """
+    impl = ai_provider.get(provider)
     try:
-        prompt = await openai_service.build_image_prompt(caption, persona)
-        image_bytes, model_used = await openai_service.generate_image(prompt)
+        prompt = await impl.build_image_prompt(caption, persona)
+        image_bytes, model_used = await impl.generate_image(prompt)
     except Exception as e:
         return {"error": str(e)}
 
