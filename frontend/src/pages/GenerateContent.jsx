@@ -167,7 +167,8 @@ export default function GenerateContent() {
           <label>AI 模型</label>
           <select value={provider} onChange={e => setProvider(e.target.value)}>
             <option value="openai">OpenAI (GPT-4o-mini)</option>
-            <option value="gemini">Google Gemini (2.5 Pro / Imagen)</option>
+            <option value="gemini">Google Gemini 2.5 Pro（高品質）</option>
+            <option value="gemini-flash">Google Gemini 2.0 Flash（快速）</option>
           </select>
         </div>
 
