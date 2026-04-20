@@ -104,7 +104,7 @@ async def startup():
     if not scheduler.get_job("analytics_sync"):
         scheduler.add_job(
             run_analytics_sync_sync,
-            trigger=IntervalTrigger(hours=6),
+            trigger=IntervalTrigger(minutes=30),
             id="analytics_sync",
             replace_existing=True,
         )
