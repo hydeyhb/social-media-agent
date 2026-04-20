@@ -46,11 +46,18 @@ def _strip_json_fence(raw: str) -> str:
 
 async def _generate_text(model: str, system: str, user: str, max_tokens: int = 800, temperature: float = 0.7) -> str:
     client = _client()
-    config = types.GenerateContentConfig(
+    # gemini-2.5-pro enables "thinking" by default; without a thinking_budget cap the
+    # thinking tokens consume max_output_tokens and leave nothing for the actual reply.
+    # We cap thinking at 512 tokens and raise the output budget accordingly.
+    is_thinking_model = "2.5" in model
+    config_kwargs = dict(
         system_instruction=system,
-        max_output_tokens=max_tokens,
+        max_output_tokens=max_tokens + (512 if is_thinking_model else 0),
         temperature=temperature,
     )
+    if is_thinking_model:
+        config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=512)
+    config = types.GenerateContentConfig(**config_kwargs)
     resp = await client.aio.models.generate_content(model=model, contents=user, config=config)
     return (resp.text or "").strip()
 
