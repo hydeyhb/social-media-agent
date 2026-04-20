@@ -245,7 +245,8 @@ export default function BrandPersona() {
               <label>AI 模型</label>
               <select value={briefProvider} onChange={e => setBriefProvider(e.target.value)} disabled={briefLoading}>
                 <option value="openai">OpenAI (GPT-4o-mini)</option>
-                <option value="gemini">Google Gemini (2.5 Pro)</option>
+                <option value="gemini">Google Gemini 2.5 Pro（高品質）</option>
+                <option value="gemini-flash">Google Gemini 2.0 Flash（快速）</option>
               </select>
             </div>
             <div className="form-group">
