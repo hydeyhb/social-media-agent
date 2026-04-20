@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 
@@ -26,3 +27,5 @@ class Post(Base):
     apscheduler_job_id = Column(String(255), default="")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    media_asset = relationship("MediaAsset", lazy="joined")
