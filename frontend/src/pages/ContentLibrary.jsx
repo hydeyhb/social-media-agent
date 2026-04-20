@@ -10,6 +10,7 @@ export default function ContentLibrary() {
   const [editing, setEditing] = useState(null)
   const [scheduleTime, setScheduleTime] = useState({})
   const [toast, setToast] = useState(null)
+  const [previewSrc, setPreviewSrc] = useState(null)
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -121,7 +122,17 @@ export default function ContentLibrary() {
                   </div>
                 </div>
               ) : (
-                <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>{p.content}</div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  {p.media_asset?.url && (
+                    <img
+                      src={p.media_asset.url}
+                      alt="post media"
+                      onClick={() => setPreviewSrc(p.media_asset.url)}
+                      style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, cursor: 'zoom-in', flexShrink: 0 }}
+                    />
+                  )}
+                  <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7, flex: 1 }}>{p.content}</div>
+                </div>
               )}
 
               {p.status === 'scheduled' && p.scheduled_at && (
@@ -160,6 +171,15 @@ export default function ContentLibrary() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {previewSrc && (
+        <div
+          onClick={() => setPreviewSrc(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, cursor: 'zoom-out' }}
+        >
+          <img src={previewSrc} alt="preview" style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: 8 }} />
         </div>
       )}
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 
 class PostCreate(BaseModel):
@@ -26,6 +26,20 @@ class PostSchedule(BaseModel):
     scheduled_at: datetime
 
 
+class MediaAssetOut(BaseModel):
+    id: int
+    filename: str
+    mime_type: Optional[str] = None
+
+    @computed_field
+    @property
+    def url(self) -> str:
+        return f"/uploads/{self.filename}"
+
+    class Config:
+        from_attributes = True
+
+
 class PostOut(BaseModel):
     id: int
     platform: str
@@ -36,6 +50,7 @@ class PostOut(BaseModel):
     facebook_post_id: str
     threads_post_id: str
     media_asset_id: Optional[int]
+    media_asset: Optional[MediaAssetOut] = None
     brand_persona_id: Optional[int]
     generation_prompt: str
     error_message: str
