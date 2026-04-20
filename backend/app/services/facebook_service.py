@@ -21,22 +21,39 @@ async def publish_photo(
     page_token: str,
     published: bool = True,
 ) -> tuple[str, str]:
-    """Returns (post_id, photo_id)"""
+    """Upload photo then attach to a feed post so it appears in timeline (not Photos album).
+    Returns (post_id, photo_id)"""
     async with httpx.AsyncClient() as client:
+        # Step 1: upload photo as unpublished to get photo_id
         with open(image_path, "rb") as f:
             resp = await client.post(
                 f"{GRAPH_BASE}/{page_id}/photos",
                 data={
-                    "caption": caption,
                     "access_token": page_token,
-                    "published": str(published).lower(),
+                    "published": "false",
                 },
                 files={"source": f},
                 timeout=60,
             )
         resp.raise_for_status()
-        data = resp.json()
-        return data.get("post_id", ""), data.get("id", "")
+        photo_id = resp.json().get("id", "")
+
+        if not published:
+            return "", photo_id
+
+        # Step 2: create a feed post with the photo attached (shows in timeline)
+        resp2 = await client.post(
+            f"{GRAPH_BASE}/{page_id}/feed",
+            data={
+                "message": caption,
+                "access_token": page_token,
+                "attached_media": f'[{{"media_fbid":"{photo_id}"}}]',
+            },
+            timeout=30,
+        )
+        resp2.raise_for_status()
+        post_id = resp2.json().get("id", "")
+        return post_id, photo_id
 
 
 async def add_comment(post_id: str, message: str, page_token: str) -> str:
