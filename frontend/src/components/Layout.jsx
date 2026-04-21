@@ -28,7 +28,7 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="sidebar-logo">
           <span>🤖</span>
-          <span>Social AI</span>
+          <span>社群AI發文小幫手</span>
         </div>
         <nav className="sidebar-nav">
           {navItems.map((item) => (

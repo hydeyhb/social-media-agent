@@ -37,7 +37,7 @@ export default function LoginPage() {
       <form className="login-card" onSubmit={handleSubmit}>
         <div className="login-logo">
           <span>🤖</span>
-          <span>Social AI</span>
+          <span>社群AI發文小幫手</span>
         </div>
         <p className="login-subtitle">管理員登入</p>
         {error && <div className="login-error">{error}</div>}
